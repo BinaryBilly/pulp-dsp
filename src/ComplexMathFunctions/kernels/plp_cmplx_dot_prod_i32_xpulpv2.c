@@ -82,31 +82,23 @@ void plp_cmplx_dot_prod_i32_xpulpv2(const int32_t *pSrcA,
                                     uint32_t numSamples,
                                     int32_t *realResult,
                                     int32_t *imagResult) {
-    uint32_t blkCnt;                    /* Loop counter */
-    int32_t real_sum = 0, imag_sum = 0; /* Temporary result variables */
-    int32_t a0, b0, c0, d0;
+    uint32_t i;
+    int32_t real_sum = 0;
+    int32_t imag_sum = 0;
+    for (i = 0; i < numSamples; i++)
+    {
+      int32_t r_a = pSrcA[i*2];
+      int32_t r_b = pSrcB[i*2];
+      int32_t i_a = pSrcA[i*2+1];
+      int32_t i_b = pSrcB[i*2+1];
 
-    /* Initialize blkCnt with number of samples */
-    blkCnt = numSamples;
-    while (blkCnt > 0U) {
-        a0 = *pSrcA++;
-        b0 = *pSrcA++;
-        c0 = *pSrcB++;
-        d0 = *pSrcB++;
-
-        real_sum += a0 * c0;
-        imag_sum += a0 * d0;
-        real_sum -= b0 * d0;
-        imag_sum += b0 * c0;
-
-        /* Decrement loop counter */
-        blkCnt--;
+      real_sum = __MAC(real_sum,r_a,r_b);
+      real_sum = __MSU(real_sum,i_a,i_b);
+      imag_sum = __MAC(imag_sum,r_a,i_b);
+      imag_sum = __MAC(imag_sum,i_a,r_b);
     }
-
-    /* Store real and imaginary result in destination buffer. */
     *realResult = real_sum;
     *imagResult = imag_sum;
-    // printf("real %d imag %d\n", real_sum, imag_sum);
 }
 /**
   @} end of cmplx_dot_prod group
