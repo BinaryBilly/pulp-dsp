@@ -75,25 +75,17 @@
 void plp_cmplx_conj_i16_xpulpv2(const int16_t *__restrict__ pSrc,
                                 int16_t *__restrict__ pDst,
                                 uint32_t numSamples) {
-    uint32_t blkCnt; /* Loop counter */
-
-    /* Initialize blkCnt with number of samples */
-    blkCnt = 2 * numSamples;
-    int8_t sign = 1;
-    while (blkCnt > 0U) {
-        /* C[0] + jC[1] = A[0]+ j(-1)A[1] */
-
-        /* Calculate Complex Conjugate and store result in destination buffer. */
-        if (sign == 1) {
-            *pDst++ = *pSrc++;
-        } else {
-            int16_t in = *pSrc++;
-            *pDst++ = (in == INT16_MIN) ? INT16_MAX : -in;
-        }
-        sign *= -1;
-
-        /* Decrement loop counter */
-        blkCnt--;
+    uint32_t i = 0;
+    uint32_t loop_length = numSamples;
+    v2s cVec;
+    v2s conjugator = {0,-1};
+    v2s one = {0,1};
+    for (i = 0; i < loop_length; i++)
+    {
+      cVec = *((v2s* )&(pSrc[2*i]));
+      cVec = __EXOR2(cVec, conjugator);
+      cVec = __ADD2(cVec, one);
+      *((v2s *)&(pDst[2*i])) = cVec;
     }
 }
 

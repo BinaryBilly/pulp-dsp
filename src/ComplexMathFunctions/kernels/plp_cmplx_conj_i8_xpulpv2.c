@@ -75,26 +75,26 @@
 void plp_cmplx_conj_i8_xpulpv2(const int8_t *__restrict__ pSrc,
                                int8_t *__restrict__ pDst,
                                uint32_t numSamples) {
-    uint32_t blkCnt; /* Loop counter */
+    uint32_t i = 0;
+    uint32_t loop_length = numSamples/2;
+    uint32_t clean_up = numSamples & 1;
+    v4s cVec;
+    v4s inverter = {0,-1,0,-1};
+    v4s adder = {0,1,0,1};
 
-    /* Initialize blkCnt with number of samples */
-    blkCnt = 2 * numSamples;
-    int8_t sign = 1;
-    while (blkCnt > 0U) {
-        /* C[0] + jC[1] = A[0]+ j(-1)A[1] */
-
-        /* Calculate Complex Conjugate and store result in destination buffer. */
-        if (sign == 1) {
-            *pDst++ = *pSrc++;
-        } else {
-            int8_t in = *pSrc++;
-            *pDst++ = (in == INT8_MIN) ? INT8_MAX : -in;
-        }
-        sign *= -1;
-
-        /* Decrement loop counter */
-        blkCnt--;
+    for (i = 0; i < loop_length; i++)
+    {
+      cVec = *((v4s* )&(pSrc[4*i]));
+      cVec = __EXOR4(cVec, inverter);
+      cVec = __ADD4(cVec, adder);
+      *((v4s *)&(pDst[4*i])) = cVec;
     }
+
+    if(clean_up){
+      pDst[i*4  ] = pSrc[i*4];
+      pDst[i*4+1] = -pSrc[i*4+1];
+    }
+
 }
 
 /**
